@@ -1,0 +1,29 @@
+C4Container
+    title Diagrama de Contêineres - Sistema IoT de Desligamento Automático de Ar-Condicionado
+
+    Person(user, "Último Usuário", "Funcionário que deixa a sala por último.")
+    
+    System_Boundary(c1, "Sistema de Gestão de Salas IoT") {
+        Container(sensor, "Sensor de Presença IoT", "Hardware / Firmware C/C++", "Detecta ausência física de pessoas na sala e publica eventos.")
+        
+        Container(broker, "Broker MQTT", "Eclipse Mosquitto", "Barramento de mensageria leve para ingestão de eventos dos sensores IoT.")
+        
+        Container(api, "Backend de Lógica e API", "Node.js (Express / TypeScript)", "Processa regras de ocupação, gerencia o estado dos dispositivos e expõe endpoints REST/Webhook.")
+        
+        ContainerDb(redis, "Cache de Estado", "Redis", "Armazena em memória o estado em tempo real da ocupação das salas e conexões ativas.")
+        
+        ContainerDb(sqlite, "Banco de Dados Relacional", "SQLite 3", "Armazena metadados de salas, histórico de eventos e logs de auditoria.")
+        
+        Container(actuator, "Atuador IoT / AC", "Microcontrolador ESP32 / IR", "Recebe comandos de desligamento e executa o corte físico de energia ou sinal infravermelho.")
+    }
+
+    Rel(user, sensor, "Sai da sala", "Presença física")
+    Rel(sensor, broker, "Publica evento de ausência", "MQTT / TCP")
+    Rel(broker, api, "Consome evento de sala vazia", "MQTT / TCP")
+    Rel(api, redis, "Consulta e atualiza estado rápido", "TCP / Redis Protocol")
+    Rel(api, sqlite, "Lê e persiste dados relacionais", "SQL / Arquivo local")
+    Rel(api, actuator, "Envia comando de desligamento", "HTTP / MQTT")
+    Rel(actuator, actuator, "Corta sinal do Ar-Condicionado", "Sinal IR / Relé Físico")
+    Rel(actuator, api, "Reporta status de sucesso/falha", "HTTP Webhook / JSON")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
