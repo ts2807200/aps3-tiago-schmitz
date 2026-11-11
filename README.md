@@ -69,6 +69,14 @@ Contribuições são sempre bem-vindas! Sinta-se à vontade para abrir uma *issu
 
 ---
 
+
+---
+[Clicke aqui para ver a adr-0001] (architeture/adr-0001.md)
+[Clicke aqui para ver o diagrama de containers] (architeture/workspace.mmd)
+[Clicke aqui para ver o diagrama de atividades] (atividades.mmd)
+[Clicke aqui para ver o diagrama de estados] (estados.mmd)
+[Clicke aqui para ver o diagrama de sequencia] (sequencia.mmd)
+
 ## 📄 Licença
 
 Este projeto está sob a licença [MIT](LICENSE).
