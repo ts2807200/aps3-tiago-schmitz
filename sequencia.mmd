@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    participant Sensor as PresenceSensor
+    participant Service as OccupancyService
+    participant WebServer as WebServerAPI
+    participant Actuator as IoTActuator
+    participant AC as AirConditioner
+
+    Note over Sensor, Service: Mensageria Assíncrona (Event-Driven)
+    Sensor-)Service: processOccupancyEvent(OccupancyEventDTO)
+    activate Service
+    
+    Note over Service, WebServer: Chamada Síncrona Bloqueante (API REST/RPC)
+    Service->>WebServer: triggerDeviceAction(CommandDTO)
+    deactivate Service
+    activate WebServer
+    
+    Note over WebServer, Actuator: Chamada Síncrona Bloqueante
+    WebServer->>Actuator: executeCommand(ActuatorCommandDTO)
+    deactivate WebServer
+    activate Actuator
+    
+    Note over Actuator, AC: Chamada Síncrona de Hardware
+    Actuator->>AC: turnOff()
+    activate AC
+    AC-->>Actuator: StatusResponseDTO
+    deactivate AC
+
+    Note over Actuator, WebServer: Fragmento Combinado (Tratamento de Exceção / Retorno Alternativo)
+    alt Sucesso no Desligamento
+        Actuator-)WebServer: reportStatus(DeviceStatusDTO [status=OFF])
+        activate WebServer
+        Note over WebServer: Atualiza estado para OFFLINE
+        deactivate WebServer
+    else Falha de Comunicação / Timeout (Exceção)
+        Actuator-)WebServer: reportStatus(ErrorDTO [error=TIMEOUT])
+        activate WebServer
+        WebServer->>WebServer: logError(LogDTO)
+        deactivate WebServer
+    end
+    deactivate Actuator

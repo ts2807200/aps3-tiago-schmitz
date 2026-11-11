@@ -1,0 +1,47 @@
+flowchart TD
+    classDef forkStyle fill:#333,stroke:#333,stroke-width:2px;
+
+    subgraph Raia1 [Usuário / Sensor de Presença]
+        direction TB
+        Start([Início]) --> A1[Usuário deixa a sala]
+        A1 --> A2[Sensor detecta ausência contínua]
+        A2 --> A3[Dispara evento assíncrono de sala vazia]
+    end
+
+    subgraph Raia2 [Sistema Back-End]
+        direction TB
+        A3 --> B1[Recebe evento no Barramento MQTT]
+        B1 --> B2{Condição de Ocupação e Estado?}
+        
+        %% Decisão negativa (Guarda na seta)
+        B2 -- "ocupacao > 0 || status_ac == DESLIGADO" --> B_Fim([Fim do Fluxo])
+        
+        %% Decisão positiva (Guarda na seta)
+        B2 -- "ocupacao == 0 && status_ac == LIGADO" --> B3[Prepara comando de desligamento]
+        
+        %% Barra de Fork (Divisão Paralela)
+        B3 --> Fork1:::forkStyle
+        
+        Fork1 --> B4[Gerar payload de comando IoT]
+        Fork1 --> B5[Registrar log de auditoria no Banco de Dados]
+        
+        %% Barra de Join (Sincronização)
+        B4 --> Join1:::forkStyle
+        B5 --> Join1:::forkStyle
+        
+        Join1 --> B6{Status da Resposta?}
+        
+        B6 -- "resposta_hardware == SUCESSO" --> B7[Atualizar estado do dispositivo para OFF]
+        B6 -- "resposta_hardware == FALHA_TIMEOUT" --> B8[Disparar alerta crítico para Facilities]
+        
+        B7 --> B_Fim
+        B8 --> B_Fim
+    end
+
+    subgraph Raia3 [Atuador IoT / Ar-Condicionado]
+        direction TB
+        B4 --> C1[Atuador recebe instrução via API/MQTT]
+        C1 --> C2[Executa corte de sinal/energia no Hardware]
+        C2 --> C3[Retorna status de confirmação para o Servidor]
+        C3 --> B6
+    end

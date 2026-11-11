@@ -1,0 +1,14 @@
+stateDiagram-v2
+    [*] --> Desligado
+
+    Desligado --> Ligado : acionarComando [salaOcupada == true] / executarComando()
+
+    state Ligado {
+        entry / reportarStatus([status=LIGADO])
+        do / manterSinalAtivo()
+        exit / registrarLogDesligamento()
+    }
+
+    Ligado --> Desligado : processarEventoOcupacao [ultimaPessoaSaiu == true] / desligar()
+    
+    Desligado --> [*]
